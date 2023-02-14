@@ -144,6 +144,74 @@ static const tA2DP_LHDCV3_SINK_CIE a2dp_lhdcv3_sink_default_config = {
     true,
 };
 
+
+static const tA2DP_LHDCV3_SINK_CIE a2dp_lhdcv3_sink_v4_config = {
+    A2DP_LHDC_VENDOR_ID,                // vendorId
+    A2DP_LHDCV3_CODEC_ID,                 // codecId
+    (A2DP_LHDC_SAMPLING_FREQ_44100 | A2DP_LHDC_SAMPLING_FREQ_48000),
+    (BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16 | BTAV_A2DP_CODEC_BITS_PER_SAMPLE_24),  // bits_per_sample
+    A2DP_LHDC_CH_SPLIT_NONE,
+    A2DP_LHDC_VER3,
+    A2DP_LHDC_MAX_BIT_RATE_900K,
+    //LL supported ?
+    false,
+
+    //bool hasFeatureJAS;
+    false,
+
+    //bool hasFeatureAR;
+    false,
+
+    //bool hasFeatureLLAC;
+    true,
+
+    //bool hasFeatureMETA;
+    false,
+
+    //bool hasFeatureMinBitrate;
+    true,
+
+    //bool hasFeatureLARC;
+    false,
+
+    //bool hasFeatureLHDCV4;
+    false,
+};
+
+static const tA2DP_LHDCV3_SINK_CIE a2dp_lhdcv3_sink_v3_config = {
+    A2DP_LHDC_VENDOR_ID,                // vendorId
+    A2DP_LHDCV3_CODEC_ID,                 // codecId
+    (A2DP_LHDC_SAMPLING_FREQ_44100 | A2DP_LHDC_SAMPLING_FREQ_48000 | A2DP_LHDC_SAMPLING_FREQ_96000),
+    (BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16 | BTAV_A2DP_CODEC_BITS_PER_SAMPLE_24),  // bits_per_sample
+    A2DP_LHDC_CH_SPLIT_NONE,
+    A2DP_LHDC_VER3,
+    A2DP_LHDC_MAX_BIT_RATE_900K,
+    //LL supported ?
+    false,
+
+    //bool hasFeatureJAS;
+    false,
+
+    //bool hasFeatureAR;
+    false,
+
+    //bool hasFeatureLLAC;
+    false,
+
+    //bool hasFeatureMETA;
+    false,
+
+    //bool hasFeatureMinBitrate;
+    false,
+
+    //bool hasFeatureLARC;
+    false,
+
+    //bool hasFeatureLHDCV4;
+    false,
+};
+
+
 static const tA2DP_DECODER_INTERFACE a2dp_decoder_interface_lhdcv3 = {
     a2dp_vendor_lhdcv3_decoder_init,
     a2dp_vendor_lhdcv3_decoder_cleanup,
@@ -320,7 +388,8 @@ static tA2DP_STATUS A2DP_ParseInfoLhdcV3Sink(tA2DP_LHDCV3_SINK_CIE* p_ie,
     p_ie->bits_per_sample |= BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16;
   }
 
-
+  p_ie->hasFeatureJAS = ((*p_codec_info & A2DP_LHDC_FEATURE_JAS) != 0) ? true : false;
+  p_ie->hasFeatureAR = ((*p_codec_info & A2DP_LHDC_FEATURE_AR) != 0) ? true : false;
   p_codec_info += 1;
 
   p_ie->version = (*p_codec_info) & A2DP_LHDC_VERSION_MASK;
@@ -332,6 +401,7 @@ static tA2DP_STATUS A2DP_ParseInfoLhdcV3Sink(tA2DP_LHDCV3_SINK_CIE* p_ie,
   p_ie->isLLSupported = ((*p_codec_info & A2DP_LHDC_LL_MASK) != 0)? true : false;
   //p_ie->isLLSupported = false;
 
+  p_ie->hasFeatureLLAC = ((*p_codec_info & A2DP_LHDC_FEATURE_LLAC) != 0) ? true : false;
   p_codec_info += 1;
 
   p_ie->channelSplitMode = (*p_codec_info) & A2DP_LHDC_CH_SPLIT_MSK;
@@ -341,9 +411,23 @@ static tA2DP_STATUS A2DP_ParseInfoLhdcV3Sink(tA2DP_LHDCV3_SINK_CIE* p_ie,
   //p_ie->supportedBitrate = (*p_codec_info);
 
 
+  p_ie->hasFeatureMETA = ((*p_codec_info & A2DP_LHDC_FEATURE_META) != 0) ? true : false;
+  p_ie->hasFeatureMinBitrate = ((*p_codec_info & A2DP_LHDC_FEATURE_MIN_BR) != 0) ? true : false;
+  p_ie->hasFeatureLARC = ((*p_codec_info & A2DP_LHDC_FEATURE_LARC) != 0) ? true : false;
+  p_ie->hasFeatureLHDCV4 = ((*p_codec_info & A2DP_LHDC_FEATURE_LHDCV4) != 0) ? true : false;
+
+  LOG_WARN(LOG_TAG, "%s:Has LL(%d) JAS(%d) AR(%d) META(%d) LLAC(%d) MBR(%d) LARC(%d) V4(%d)", __func__,
+      p_ie->isLLSupported,
+      p_ie->hasFeatureJAS,
+      p_ie->hasFeatureAR,
+      p_ie->hasFeatureMETA,
+      p_ie->hasFeatureLLAC,
+      p_ie->hasFeatureMinBitrate,
+      p_ie->hasFeatureLARC,
+      p_ie->hasFeatureLHDCV4);
 
 
-    LOG_DEBUG("%s: codec info = [0]:0x%x, [1]:0x%x, [2]:0x%x, [3]:0x%x, [4]:0x%x, [5]:0x%x, [6]:0x%x, [7]:0x%x, [8]:0x%x, [9]:0x%x, [10]:0x%x, [11]:0x%x",
+    LOG_WARN(LOG_TAG, "%s: codec info = [0]:0x%x, [1]:0x%x, [2]:0x%x, [3]:0x%x, [4]:0x%x, [5]:0x%x, [6]:0x%x, [7]:0x%x, [8]:0x%x, [9]:0x%x, [10]:0x%x, [11]:0x%x",
             __func__, tmpInfo[0], tmpInfo[1], tmpInfo[2], tmpInfo[3], tmpInfo[4], tmpInfo[5], tmpInfo[6],
                         tmpInfo[7], tmpInfo[8], tmpInfo[9], tmpInfo[10], tmpInfo[11]);
 
@@ -358,7 +442,7 @@ static tA2DP_STATUS A2DP_ParseInfoLhdcV3Sink(tA2DP_LHDCV3_SINK_CIE* p_ie,
 }
 
 const char* A2DP_VendorCodecNameLhdcV3Sink(UNUSED_ATTR const uint8_t* p_codec_info) {
-  return "LHDC V3";
+  return "LHDC V3 Sink";
 }
 
 bool A2DP_IsVendorSinkCodecValidLhdcV3(const uint8_t* p_codec_info) {
@@ -396,6 +480,7 @@ void A2DP_InitDefaultCodecLhdcV3Sink(uint8_t* p_codec_info) {
     LOG_ERROR("%s: A2DP_BuildInfoSbc failed", __func__);
   }
 }
+
 
 // Checks whether A2DP SBC codec configuration matches with a device's codec
 // capabilities. |p_cap| is the SBC codec configuration. |p_codec_info| is
@@ -686,8 +771,6 @@ UNUSED_ATTR static void build_codec_config(const tA2DP_LHDCV3_SINK_CIE& config_c
 
 
 
-
-
 A2dpCodecConfigLhdcV3Sink::A2dpCodecConfigLhdcV3Sink(
     btav_a2dp_codec_priority_t codec_priority)
     : A2dpCodecConfigLhdcV3Base(BTAV_A2DP_CODEC_INDEX_SINK_LHDCV3,
@@ -732,16 +815,376 @@ int A2dpCodecConfigLhdcV3Sink::getEffectiveMtu() const {
 }
 
 
+static bool select_best_sample_rate(uint8_t sampleRate,
+    tA2DP_LHDCV3_SINK_CIE* p_result,
+    btav_a2dp_codec_config_t* p_codec_config) {
+  if (sampleRate & A2DP_LHDC_SAMPLING_FREQ_96000) {
+    p_result->sampleRate = A2DP_LHDC_SAMPLING_FREQ_96000;
+    p_codec_config->sample_rate = BTAV_A2DP_CODEC_SAMPLE_RATE_96000;
+    return true;
+  }
+  if (sampleRate & A2DP_LHDC_SAMPLING_FREQ_48000) {
+    p_result->sampleRate = A2DP_LHDC_SAMPLING_FREQ_48000;
+    p_codec_config->sample_rate = BTAV_A2DP_CODEC_SAMPLE_RATE_48000;
+    return true;
+  }
+  if (sampleRate & A2DP_LHDC_SAMPLING_FREQ_44100) {
+    p_result->sampleRate = A2DP_LHDC_SAMPLING_FREQ_44100;
+    p_codec_config->sample_rate = BTAV_A2DP_CODEC_SAMPLE_RATE_44100;
+    return true;
+  }
+  return false;
+  }
+
+static bool select_best_bits_per_sample(
+    btav_a2dp_codec_bits_per_sample_t bits_per_sample, tA2DP_LHDCV3_SINK_CIE* p_result,
+    btav_a2dp_codec_config_t* p_codec_config) {
+  if (bits_per_sample & BTAV_A2DP_CODEC_BITS_PER_SAMPLE_24) {
+     p_codec_config->bits_per_sample = BTAV_A2DP_CODEC_BITS_PER_SAMPLE_24;
+    p_result->bits_per_sample = BTAV_A2DP_CODEC_BITS_PER_SAMPLE_24;
+    return true;
+  }
+  if (bits_per_sample & BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16) {
+    p_codec_config->bits_per_sample = BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16;
+    p_result->bits_per_sample = BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16;
+    return true;
+  }
+  return false;
+}
+
+
 bool A2dpCodecConfigLhdcV3Base::setCodecConfig(const uint8_t* p_peer_codec_info, bool is_capability,
                       uint8_t* p_result_codec_config) {
-  is_source_ = false;
+    is_source_ = false;
+
+    std::lock_guard<std::recursive_mutex> lock(codec_mutex_);
+    tA2DP_LHDCV3_SINK_CIE peer_info_cie;    //codec info of peer (source)
+    tA2DP_LHDCV3_SINK_CIE result_config_cie;
+    uint8_t sampleRate;
+    btav_a2dp_codec_bits_per_sample_t bits_per_sample;
+    const tA2DP_LHDCV3_SINK_CIE* p_a2dp_lhdcv3_caps = NULL;
+
+
+  LOG_WARN(LOG_TAG, "%s: is_capability = %d", __func__, is_capability);
+
+  // Save the internal state
+  btav_a2dp_codec_config_t saved_codec_config = codec_config_;
+  btav_a2dp_codec_config_t saved_codec_capability = codec_capability_;
+  btav_a2dp_codec_config_t saved_codec_selectable_capability =
+      codec_selectable_capability_;
+  btav_a2dp_codec_config_t saved_codec_user_config = codec_user_config_;
+  btav_a2dp_codec_config_t saved_codec_audio_config = codec_audio_config_;
+  uint8_t saved_ota_codec_config[AVDT_CODEC_SIZE];
+  uint8_t saved_ota_codec_peer_capability[AVDT_CODEC_SIZE];
+  uint8_t saved_ota_codec_peer_config[AVDT_CODEC_SIZE];
+  memcpy(saved_ota_codec_config, ota_codec_config_, sizeof(ota_codec_config_));
+  memcpy(saved_ota_codec_peer_capability, ota_codec_peer_capability_,
+         sizeof(ota_codec_peer_capability_));
+  memcpy(saved_ota_codec_peer_config, ota_codec_peer_config_,
+         sizeof(ota_codec_peer_config_));
+
+  tA2DP_STATUS status =
+      A2DP_ParseInfoLhdcV3Sink(&peer_info_cie, p_peer_codec_info, is_capability);
+  if (status != A2DP_SUCCESS) {
+    LOG_ERROR(LOG_TAG, "%s: can't parse peer's Sink capabilities: error = %d",
+              __func__, status);
+    goto fail;
+  }
+
+  if (peer_info_cie.hasFeatureLHDCV4 && peer_info_cie.hasFeatureLLAC) {
+    //LHDCV4 + LLAC
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v4_config;
+    LOG_WARN(LOG_TAG, "%s: LHDCV4 + LLAC", __func__);
+  } else if (peer_info_cie.hasFeatureLHDCV4 && !peer_info_cie.hasFeatureLLAC) {
+    //LHDCV4 Only
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v3_config;
+    LOG_WARN(LOG_TAG, "%s: LHDCV4 Only", __func__);
+  } else if (!peer_info_cie.hasFeatureLHDCV4 && peer_info_cie.hasFeatureLLAC) {
+    //LLAC Only
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v4_config;
+    LOG_WARN(LOG_TAG, "%s: LLAC Only", __func__);
+  } else if (!peer_info_cie.hasFeatureLHDCV4 && !peer_info_cie.hasFeatureLLAC) {
+    //LHDC V3 only
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v3_config;
+    LOG_WARN(LOG_TAG, "%s: LHDC V3 only", __func__);
+  }
+
+  //
+  // Build the preferred configuration
+  //
+  memset(&result_config_cie, 0, sizeof(result_config_cie));
+  result_config_cie.vendorId = p_a2dp_lhdcv3_caps->vendorId;
+  result_config_cie.codecId = p_a2dp_lhdcv3_caps->codecId;
+  result_config_cie.version = p_a2dp_lhdcv3_caps->version;
+
+  //
+  // Select the sample frequency
+  //
+  sampleRate = p_a2dp_lhdcv3_caps->sampleRate & peer_info_cie.sampleRate;
+  LOG_DEBUG(LOG_TAG, "%s: sampleRate local:0x%x peer:0x%x matched:0x%x", __func__,
+      p_a2dp_lhdcv3_caps->sampleRate, peer_info_cie.sampleRate, sampleRate);
+
+  codec_config_.sample_rate = BTAV_A2DP_CODEC_SAMPLE_RATE_NONE;
+  // Select the sample frequency if there is no user preference
+  do {
+    // No user preference - use the best match
+    if (select_best_sample_rate(sampleRate, &result_config_cie,
+                                &codec_config_)) {
+      LOG_DEBUG(LOG_TAG, "%s: select best sample rate(best):0x%x", __func__,
+          result_config_cie.sampleRate);
+      break;
+    }
+  } while (false);
+  if (codec_config_.sample_rate == BTAV_A2DP_CODEC_SAMPLE_RATE_NONE) {
+    LOG_ERROR(LOG_TAG,
+              "%s: cannot match sample frequency: local caps = 0x%x "
+              "peer info = 0x%x",
+              __func__, p_a2dp_lhdcv3_caps->sampleRate, peer_info_cie.sampleRate);
+    goto fail;
+  }
+  LOG_WARN(LOG_TAG, "%s: final sample rate = 0x%02X", __func__,
+      result_config_cie.sampleRate);
+
+  //
+  // Select the bits per sample
+  //
+  // NOTE: this information is NOT included in the LHDC A2DP codec description
+  // that is sent OTA.
+  bits_per_sample = p_a2dp_lhdcv3_caps->bits_per_sample & peer_info_cie.bits_per_sample;
+  LOG_DEBUG(LOG_TAG, "%s: bits_per_sample src:0x%02x sink:0x%02x matched:0x%02x", __func__,
+      p_a2dp_lhdcv3_caps->bits_per_sample, peer_info_cie.bits_per_sample, bits_per_sample);
+
+  codec_config_.bits_per_sample = BTAV_A2DP_CODEC_BITS_PER_SAMPLE_NONE;
+  // Select the bits per sample if there is no user preference
+  do {
+    // No user preference - use the best match
+    if (select_best_bits_per_sample(bits_per_sample,
+                                    &result_config_cie, &codec_config_)) {
+      LOG_DEBUG(LOG_TAG, "%s: select best bits_per_sample(best):0x%x",
+          __func__, result_config_cie.bits_per_sample);
+      break;
+    }
+  } while (false);
+  if (codec_config_.bits_per_sample == BTAV_A2DP_CODEC_BITS_PER_SAMPLE_NONE) {
+    LOG_ERROR(LOG_TAG,
+              "%s: cannot match bits per sample", __func__);
+    goto fail;
+  }
+  LOG_WARN(LOG_TAG, "%s: final bits per sample = 0x%02X", __func__,
+      result_config_cie.bits_per_sample);
+
+  /**
+  *LHDC V4 modify
+  */
+
+  /*******************************************
+   * Update Feature/Capabilities: LLAC
+   * to A2DP specifics
+   *******************************************/
+  result_config_cie.hasFeatureLLAC = p_a2dp_lhdcv3_caps->hasFeatureLLAC;
+  LOG_WARN(LOG_TAG, "%s: final hasFeatureLLAC = 0x%02X", __func__,
+      result_config_cie.hasFeatureLLAC);
+
+  /*******************************************
+   * Update Feature/Capabilities: LHDCV4
+   * to A2DP specifics
+   *******************************************/
+  result_config_cie.hasFeatureLHDCV4 = p_a2dp_lhdcv3_caps->hasFeatureLHDCV4;
+  LOG_WARN(LOG_TAG, "%s: final hasFeatureLHDCV4 = 0x%02X", __func__,
+      result_config_cie.hasFeatureLHDCV4);
+
+  /*******************************************
+   * Update Feature/Capabilities: JAS
+   * to A2DP specifics
+   *******************************************/
+  result_config_cie.hasFeatureJAS = p_a2dp_lhdcv3_caps->hasFeatureJAS;
+  LOG_WARN(LOG_TAG, "%s: final hasFeatureJAS = 0x%02X", __func__,
+      result_config_cie.hasFeatureJAS);
+
+  /*******************************************
+   * Update Feature/Capabilities: AR
+   * to A2DP specifics
+   *******************************************/
+  result_config_cie.hasFeatureAR = p_a2dp_lhdcv3_caps->hasFeatureAR;
+  LOG_WARN(LOG_TAG, "%s: final hasFeatureAR = 0x%02X", __func__,
+      result_config_cie.hasFeatureAR);
+
+  /*******************************************
+   * Update Feature/Capabilities: META
+   * to A2DP specifics
+   *******************************************/
+  result_config_cie.hasFeatureMETA = p_a2dp_lhdcv3_caps->hasFeatureMETA;
+  LOG_WARN(LOG_TAG, "%s: final hasFeatureMETA = 0x%02X", __func__,
+      result_config_cie.hasFeatureMETA);
+
+  /*******************************************
+   * Update Feature/Capabilities: MBR
+   * to A2DP specifics
+   *******************************************/
+  result_config_cie.hasFeatureMinBitrate = p_a2dp_lhdcv3_caps->hasFeatureMinBitrate;
+  LOG_WARN(LOG_TAG, "%s: final hasFeatureMinBitrate = 0x%02X", __func__,
+      result_config_cie.hasFeatureMinBitrate);
+
+  /*******************************************
+   * Update Feature/Capabilities: LARC
+   * to A2DP specifics
+   *******************************************/
+  result_config_cie.hasFeatureLARC = p_a2dp_lhdcv3_caps->hasFeatureLARC;
+  LOG_WARN(LOG_TAG, "%s: final hasFeatureLARC = 0x%02X", __func__,
+      result_config_cie.hasFeatureLARC);
+
+  //
+  // Copy the codec-specific fields if they are not zero
+  //
+  if (codec_user_config_.codec_specific_1 != 0)
+    codec_config_.codec_specific_1 = codec_user_config_.codec_specific_1;
+  if (codec_user_config_.codec_specific_2 != 0)
+    codec_config_.codec_specific_2 = codec_user_config_.codec_specific_2;
+  if (codec_user_config_.codec_specific_3 != 0)
+    codec_config_.codec_specific_3 = codec_user_config_.codec_specific_3;
+  if (codec_user_config_.codec_specific_4 != 0)
+    codec_config_.codec_specific_4 = codec_user_config_.codec_specific_4;
+
+  /* Setup final nego result codec config to peer */
+  if (int ret = A2DP_BuildInfoLhdcV3Sink(AVDT_MEDIA_TYPE_AUDIO, &result_config_cie,
+                         p_result_codec_config) != A2DP_SUCCESS) {
+    LOG_ERROR(LOG_TAG,"%s: A2DP_BuildInfoLhdcV3 fail(0x%x)", __func__, ret);
+    goto fail;
+  }
+
+  // Create a local copy of the peer codec capability, and the
+  // result codec config.
+  if (is_capability) {
+    status = A2DP_BuildInfoLhdcV3Sink(AVDT_MEDIA_TYPE_AUDIO, &peer_info_cie,
+                                ota_codec_peer_capability_);
+  } else {
+    status = A2DP_BuildInfoLhdcV3Sink(AVDT_MEDIA_TYPE_AUDIO, &peer_info_cie,
+                                ota_codec_peer_config_);
+  }
+  CHECK(status == A2DP_SUCCESS);
+
+  status = A2DP_BuildInfoLhdcV3Sink(AVDT_MEDIA_TYPE_AUDIO, &result_config_cie,
+                              ota_codec_config_);
+  CHECK(status == A2DP_SUCCESS);
+
+  LOG_WARN(LOG_TAG, "%s: done", __func__);
   return true;
+
+fail:
+  // Restore the internal state
+  codec_config_ = saved_codec_config;
+  codec_capability_ = saved_codec_capability;
+  codec_selectable_capability_ = saved_codec_selectable_capability;
+  codec_user_config_ = saved_codec_user_config;
+  codec_audio_config_ = saved_codec_audio_config;
+  memcpy(ota_codec_config_, saved_ota_codec_config, sizeof(ota_codec_config_));
+  memcpy(ota_codec_peer_capability_, saved_ota_codec_peer_capability,
+         sizeof(ota_codec_peer_capability_));
+  memcpy(ota_codec_peer_config_, saved_ota_codec_peer_config,
+         sizeof(ota_codec_peer_config_));
+
+  LOG_WARN(LOG_TAG, "%s: success", __func__);
+  return false;
 }
+ 
+
 
 bool A2dpCodecConfigLhdcV3Base::setPeerCodecCapabilities(
       const uint8_t* p_peer_codec_capabilities) {
   is_source_ = false;
-  return true;
-}
 
+  
+std::lock_guard<std::recursive_mutex> lock(codec_mutex_);
+  tA2DP_LHDCV3_SINK_CIE peer_info_cie;
+  uint8_t sampleRate;
+  uint8_t bits_per_sample;
+  const tA2DP_LHDCV3_SINK_CIE* p_a2dp_lhdcv3_caps = NULL;
+
+  LOG_WARN(LOG_TAG, "%s: enter", __func__);
+
+  // Save the internal state
+  btav_a2dp_codec_config_t saved_codec_selectable_capability =
+  codec_selectable_capability_;
+  uint8_t saved_ota_codec_peer_capability[AVDT_CODEC_SIZE];
+  memcpy(saved_ota_codec_peer_capability, ota_codec_peer_capability_,
+         sizeof(ota_codec_peer_capability_));
+
+  tA2DP_STATUS status =
+  A2DP_ParseInfoLhdcV3Sink(&peer_info_cie, p_peer_codec_capabilities, true);
+  if (status != A2DP_SUCCESS) {
+      LOG_ERROR(LOG_TAG, "%s: can't parse peer's capabilities: error = %d",
+                __func__, status);
+      goto fail;
+  }
+
+  if (peer_info_cie.hasFeatureLHDCV4 && peer_info_cie.hasFeatureLLAC) {
+    //LHDCV4 + LLAC
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v4_config;
+    LOG_WARN(LOG_TAG, "%s: LHDCV4 + LLAC", __func__);
+  } else if (peer_info_cie.hasFeatureLHDCV4 && !peer_info_cie.hasFeatureLLAC) {
+    //LHDCV4 Only
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v3_config;
+    LOG_WARN(LOG_TAG, "%s: LHDCV4 only", __func__);
+  } else if (!peer_info_cie.hasFeatureLHDCV4 && peer_info_cie.hasFeatureLLAC) {
+    //LLAC Only
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v4_config;
+    LOG_WARN(LOG_TAG, "%s: LLAC only", __func__);
+  } else if (!peer_info_cie.hasFeatureLHDCV4 && !peer_info_cie.hasFeatureLLAC) {
+    //LHDC V3 only
+    p_a2dp_lhdcv3_caps = &a2dp_lhdcv3_sink_v3_config;
+    LOG_WARN(LOG_TAG, "%s: LHDC V3 only", __func__);
+  }
+
+  // Compute the selectable capability - bits per sample
+  //codec_selectable_capability_.bits_per_sample =
+  //p_a2dp_lhdcv3_caps->bits_per_sample;
+  bits_per_sample = p_a2dp_lhdcv3_caps->bits_per_sample & peer_info_cie.bits_per_sample;
+  if (bits_per_sample & BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16) {
+      codec_selectable_capability_.bits_per_sample |= BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16;
+  }
+  if (bits_per_sample & BTAV_A2DP_CODEC_BITS_PER_SAMPLE_24) {
+      codec_selectable_capability_.bits_per_sample |= BTAV_A2DP_CODEC_BITS_PER_SAMPLE_24;
+  }
+
+  // Compute the selectable capability - sample rate
+  sampleRate = p_a2dp_lhdcv3_caps->sampleRate & peer_info_cie.sampleRate;
+  if (sampleRate & A2DP_LHDC_SAMPLING_FREQ_44100) {
+      codec_selectable_capability_.sample_rate |=
+      BTAV_A2DP_CODEC_SAMPLE_RATE_44100;
+  }
+  if (sampleRate & A2DP_LHDC_SAMPLING_FREQ_48000) {
+      codec_selectable_capability_.sample_rate |=
+      BTAV_A2DP_CODEC_SAMPLE_RATE_48000;
+  }
+  if (sampleRate & A2DP_LHDC_SAMPLING_FREQ_96000) {
+      codec_selectable_capability_.sample_rate |=
+      BTAV_A2DP_CODEC_SAMPLE_RATE_96000;
+  }
+
+  // Compute the selectable capability - channel mode
+  codec_selectable_capability_.channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO;
+
+  status = A2DP_BuildInfoLhdcV3Sink(AVDT_MEDIA_TYPE_AUDIO, &peer_info_cie,
+                              ota_codec_peer_capability_);
+  CHECK(status == A2DP_SUCCESS);
+
+  LOG_WARN(LOG_TAG, "%s: sampleRate[local=%02X peer=%02X]:%02X", __func__,
+      p_a2dp_lhdcv3_caps->sampleRate, peer_info_cie.sampleRate, sampleRate);
+
+  LOG_WARN(LOG_TAG, "%s: bitsPerSample[local=%02X peer=%02X]:%02X", __func__,
+      p_a2dp_lhdcv3_caps->bits_per_sample, peer_info_cie.bits_per_sample, bits_per_sample);
+
+  LOG_WARN(LOG_TAG, "%s: success!", __func__);
+   return true;
+
+fail:
+  // Restore the internal state
+  codec_selectable_capability_ = saved_codec_selectable_capability;
+  memcpy(ota_codec_peer_capability_, saved_ota_codec_peer_capability,
+         sizeof(ota_codec_peer_capability_));
+  LOG_WARN(LOG_TAG, "%s: fail", __func__);
+  return false;
+}
+ 
+ 
 
